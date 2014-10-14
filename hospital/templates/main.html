@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+    <meta charset="UTF-8">
+    <link type="text/css" rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.2.0/css/bootstrap.min.css">
+    <style>
+        .container {
+            margin-top: 10%;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <td class="col-md-5">Специальность</td>
+                <td class="col-md-4">Принято пациентов</td>
+                <td class="col-md-3">Всего талончиков</td>
+            </tr>
+        </thead>
+        <tbody>
+            {% for spec in data %}
+                <tr data-spec-id="{{ spec.doctor__speciality_id }}">
+                    <td>{{ spec.doctor__speciality__name }}</td>
+                    <td>{{ spec.not_empty }}</td>
+                    <td>{{ spec.all_tickets }}</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<script src="//cdnjs.cloudflare.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.2.0/js/bootstrap.min.js"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/underscore.js/1.7.0/underscore-min.js"></script>
+
+<script type="text/template" id="row_template">
+    <% _.each(doctors, function(doc) { %>
+    <tr class='details_<%= spec_id %>'>
+        <td class='text-right'><%= doc.doctor__name %></td>
+        <td><%= doc.not_empty %></td>
+        <td><%= doc.all_tickets %></td>
+    </tr>
+    <% }) %>
+</script>
+
+<script>
+    $(function(){
+        $("table tr").click(function() {
+            var that = $(this);
+            var spec_id = that.data("spec-id");
+
+            // not so elegant, but simple
+            if ($(".details_" + spec_id + ":visible").length > 0) {
+                $(".details_" + spec_id).remove();
+            }
+            else {
+                $.get(
+                    "{% url 'get_spec_data' %}?spec_id=" + spec_id,
+                    function(data) {
+                        that.after(
+                            _.template($("#row_template").html())({spec_id: spec_id, doctors: data})
+                        )
+                    }
+                )
+            }
+        })
+    })
+</script>
+</body>
+</html>
